@@ -1,6 +1,8 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
 
+model_name = r"C:\Users\MOMALI\.cache\huggingface\hub"
+
 def load_model(model_name: str):
     """
     Load a Hugging Face model and tokenizer from the local cache.
