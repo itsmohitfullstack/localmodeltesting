@@ -1,0 +1,52 @@
+from deepeval.test_case import LLMTestCase
+
+# Test Case 1: Deforestation Causes
+test_case_1 = LLMTestCase(
+    input="What are the main causes of deforestation?",
+    actual_output="Deforestation is primarily caused by agricultural expansion, logging activities, and urban development.",
+    expected_output="The main causes of deforestation are agricultural expansion, logging, infrastructure development, and urbanization.",
+    context=[
+        "Deforestation is driven by multiple factors including agriculture, logging, infrastructure, and urban expansion.",
+        "Agricultural expansion accounts for approximately 50% of global deforestation."
+    ],
+    retrieval_context=[
+        "Agricultural expansion, particularly for crops like soy and palm oil, is a leading cause of deforestation.",
+        "Logging for timber and paper products contributes significantly to forest loss in tropical regions.",
+        "Infrastructure projects, such as roads and dams, often lead to deforestation."
+    ]
+)
+
+# Test Case 2: Climate Change Impact
+test_case_2 = LLMTestCase(
+    input="How does climate change affect sea levels?",
+    actual_output="Climate change causes sea levels to rise due to melting ice caps and thermal expansion of seawater.",
+    expected_output="Climate change leads to rising sea levels through the melting of polar ice caps and glaciers, as well as thermal expansion of seawater due to warming temperatures.",
+    context=[
+        "Climate change results in rising sea levels due to melting ice and thermal expansion.",
+        "Global warming increases ocean temperatures, causing water to expand."
+    ],
+    retrieval_context=[
+        "Melting polar ice caps and glaciers contribute to rising sea levels as ice turns into water.",
+        "Thermal expansion occurs when seawater warms and occupies more volume.",
+        "Sea level rise threatens coastal communities and ecosystems."
+    ]
+)
+
+# Test Case 3: Renewable Energy Benefits
+test_case_3 = LLMTestCase(
+    input="What are the benefits of renewable energy?",
+    actual_output="Renewable energy reduces greenhouse gas emissions and provides sustainable power.",
+    expected_output="Renewable energy sources, such as solar and wind, reduce greenhouse gas emissions, decrease reliance on fossil fuels, and provide sustainable, long-term energy solutions.",
+    context=[
+        "Renewable energy includes solar, wind, hydro, and geothermal sources.",
+        "These sources produce little to no greenhouse gas emissions during operation."
+    ],
+    retrieval_context=[
+        "Solar and wind energy reduce carbon emissions by replacing fossil fuels.",
+        "Renewable energy sources are sustainable and replenish naturally over time.",
+        "Adopting renewables can lower energy costs in the long term."
+    ]
+)
+
+# List of test cases for DeepEval evaluation
+test_cases = [test_case_1, test_case_2, test_case_3]
