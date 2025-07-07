@@ -1,28 +1,42 @@
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer, AutoConfig
 import torch
 import os
 import json
 
 def get_available_models(cache_dir: str = r"C:\Users\MOMALI\.cache\huggingface\hub"):
     """
-    Scan the Hugging Face cache directory for valid model directories.
+    Scan the Hugging Face cache directory for valid causal language model directories.
     
     Args:
         cache_dir (str): Path to the Hugging Face cache directory.
         
     Returns:
-        list: List of model directories that contain a config.json file.
+        list: List of tuples (model_name, model_path) for valid causal language models.
     """
     try:
         model_dirs = []
         for root, dirs, files in os.walk(cache_dir):
             if "config.json" in files:
-                relative_path = os.path.relpath(root, cache_dir)
-                if relative_path.startswith("models--"):
-                    model_name = relative_path.split(os.sep)[0].replace("models--", "").replace("--", "/")
-                    model_dirs.append((model_name, model_path))
-                else:
-                    model_dirs.append((relative_path, model_path))
+                # Check if the model is a causal language model
+                config_path = os.path.join(root, "config.json")
+                try:
+                    with open(config_path, "r") as f:
+                        config = json.load(f)
+                    # Only include models with architectures suitable for causal LM
+                    if "architectures" in config and any(
+                        "CausalLM" in arch for arch in config.get("architectures", [])
+                    ):
+                        relative_path = os.path.relpath(root, cache_dir)
+                        if relative_path.startswith("models--"):
+                            # Extract model name (e.g., 'gpt2' from 'models--gpt2--snapshots--<hash>')
+                            model_name = relative_path.split(os.sep)[0].replace("models--", "").replace("--", "/")
+                            model_dirs.append((model_name, root))
+                        else:
+                            model_dirs.append((relative_path, root))
+                except Exception:
+                    continue  # Skip invalid config files
+        if not model_dirs:
+            raise Exception("No valid causal language models found in the cache directory.")
         return model_dirs
     except Exception as e:
         raise Exception(f"Error scanning cache directory: {str(e)}")
