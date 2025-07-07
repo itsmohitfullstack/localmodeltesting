@@ -23,7 +23,7 @@ with st.form(key="input_form"):
     if model_names:
         selected_model = st.selectbox("Select a Model", model_names)
     else:
-        st.error("No models found in the cache directory.")
+        st.error("No valid causal language models found in the cache directory.")
         selected_model = None
     prompt = st.text_area("Enter your prompt:", height=150)
     max_length = st.slider("Max output length:", min_value=50, max_value=500, value=100)
