@@ -1,27 +1,55 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
+import os
+import json
 
-model_name = r"C:\Users\MOMALI\.cache\huggingface\hub"
-
-def load_model(model_name: str):
+def get_available_models(cache_dir: str = r"C:\Users\MOMALI\.cache\huggingface\hub"):
     """
-    Load a Hugging Face model and tokenizer from the local cache.
+    Scan the Hugging Face cache directory for valid model directories.
     
     Args:
-        model_name (str): Name of the model (e.g., 'gpt2').
+        cache_dir (str): Path to the Hugging Face cache directory.
+        
+    Returns:
+        list: List of model directories that contain a config.json file.
+    """
+    try:
+        model_dirs = []
+        # Walk through the cache directory
+        for root, dirs, files in os.walk(cache_dir):
+            if "config.json" in files:
+                # Extract the model name from the directory path
+                model_path = root
+                # Get the model identifier (e.g., models--gpt2--snapshots--<hash> -> gpt2)
+                relative_path = os.path.relpath(root, cache_dir)
+                if relative_path.startswith("models--"):
+                    model_name = relative_path.split(os.sep)[0].replace("models--", "").replace("--", "/")
+                    model_dirs.append((model_name, model_path))
+                else:
+                    model_dirs.append((relative_path, model_path))
+        return model_dirs
+    except Exception as e:
+        raise Exception(f"Error scanning cache directory: {str(e)}")
+
+def load_model(model_path: str):
+    """
+    Load a Hugging Face model and tokenizer from the specified path.
+    
+    Args:
+        model_path (str): Path to the model directory.
         
     Returns:
         model, tokenizer: Loaded model and tokenizer.
     """
     try:
-        # Load tokenizer and model from local cache
-        tokenizer = AutoTokenizer.from_pretrained(model_name, local_files_only=True)
-        model = AutoModelForCausalLM.from_pretrained(model_name, local_files_only=True)
+        # Load tokenizer and model from local path
+        tokenizer = AutoTokenizer.from_pretrained(model_path, local_files_only=True)
+        model = AutoModelForCausalLM.from_pretrained(model_path, local_files_only=True)
         # Ensure model is in evaluation mode
         model.eval()
         return model, tokenizer
     except Exception as e:
-        raise Exception(f"Failed to load model {model_name}: {str(e)}")
+        raise Exception(f"Failed to load model from {model_path}: {str(e)}")
 
 def generate_text(model, tokenizer, prompt: str, max_length: int = 100):
     """
