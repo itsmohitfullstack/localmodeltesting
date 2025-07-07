@@ -15,12 +15,8 @@ def get_available_models(cache_dir: str = r"C:\Users\MOMALI\.cache\huggingface\h
     """
     try:
         model_dirs = []
-        # Walk through the cache directory
         for root, dirs, files in os.walk(cache_dir):
             if "config.json" in files:
-                # Extract the model name from the directory path
-                model_path = root
-                # Get the model identifier (e.g., models--gpt2--snapshots--<hash> -> gpt2)
                 relative_path = os.path.relpath(root, cache_dir)
                 if relative_path.startswith("models--"):
                     model_name = relative_path.split(os.sep)[0].replace("models--", "").replace("--", "/")
@@ -45,6 +41,9 @@ def load_model(model_path: str):
         # Load tokenizer and model from local path
         tokenizer = AutoTokenizer.from_pretrained(model_path, local_files_only=True)
         model = AutoModelForCausalLM.from_pretrained(model_path, local_files_only=True)
+        # Set pad_token_id to eos_token_id if not already set
+        if tokenizer.pad_token_id is None:
+            tokenizer.pad_token_id = tokenizer.eos_token_id
         # Ensure model is in evaluation mode
         model.eval()
         return model, tokenizer
@@ -65,18 +64,32 @@ def generate_text(model, tokenizer, prompt: str, max_length: int = 100):
         str: Generated text.
     """
     try:
-        # Tokenize input prompt
-        inputs = tokenizer(prompt, return_tensors="pt")
-        # Generate text
+        # Tokenize input prompt with padding and attention mask
+        inputs = tokenizer(
+            prompt,
+            return_tensors="pt",
+            padding=True,
+            truncation=True,
+            max_length=max_length,
+            return_attention_mask=True
+        )
+        # Ensure inputs are on the same device as the model
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        model.to(device)
+        inputs = {key: val.to(device) for key, val in inputs.items()}
+        
+        # Generate text with adjusted parameters
         outputs = model.generate(
-            inputs["input_ids"],
+            input_ids=inputs["input_ids"],
+            attention_mask=inputs["attention_mask"],
             max_length=max_length,
             num_return_sequences=1,
             no_repeat_ngram_size=2,
             do_sample=True,
             top_k=50,
             top_p=0.95,
-            temperature=0.7
+            temperature=0.7,
+            pad_token_id=tokenizer.pad_token_id
         )
         # Decode generated tokens
         generated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
